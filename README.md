@@ -43,7 +43,7 @@ yarn build
 
 ## Архитектура
 
-### Компоненты модели данных (бизнес-логика)
+### Базовый код
 
 1. Класс ```Product```
    
@@ -57,7 +57,31 @@ yarn build
 - ```image: string``` - изображение
 - ```tags: string[]``` - теги
 
-2. Класс ```Cart```
+2. Класс ```EventEmitter```
+
+Обеспечивает модель событий в приложении
+
+Класс имеет такие методы:
+- ```on(event: string, handler: Function)``` - подписка на событие
+- ```off(event: string, handler: Function)``` - отписка от события
+- ```emit(event: string, payload<T>: T)``` - уведомление о наступлении события
+- ```offAll()``` - сброс всех подписчиков
+- ```onAll()``` - подписка на все события
+- ```trigger()``` - генерирует заданное событие с заданными аргументами
+
+3. Класс ```CustomerData```
+
+Описывает данные покупателя
+
+Конструктор принимает такие аргументы:
+- ```phone: string``` - номер телефона
+- ```address: string``` - адрес
+- ```email: string``` - почта
+- ```paymentMethod: string``` - метод доставки
+
+### Компоненты модели данных (бизнес-логика)
+
+1. Класс ```Cart```
    
 Отвечает за управление корзиной пользователя
 
@@ -70,7 +94,7 @@ yarn build
 - ```pay()``` - оформление
 - ```getTotal: number``` - общая цена
 
-###  Компоненты представления
+### Компоненты представления
 
 1. Класс ```ProductCard```
    
@@ -84,31 +108,65 @@ yarn build
 
 Интерфейс корзины покупателя. Отображает список товаров в корзине ```cart: Cart``` и кнопку "Оформить" ```onCheckOut: () => void```.
 
+4. Класс ```CheckoutForm```
+
+Форма подтверждения заказа. Пользователь вводит ```address```, ```phone```, ```email``` и подтверждает заказ ```onSubmit```.
+
 ### Ключевые типы данных
 
 ```
 type ProductID = number;
 
 interface Product {
-  id: ProductID;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  tags: string[];
+  id: ProductID; // id продукта
+  name: string; // название 
+  description: string; // описание
+  price: number; // цена
+  imageUrl: string; // изображение
+  tags: string[]; // тег
+}
+
+interface CustomerData {
+  phone: string; // номер пользователя
+  email: string; // почта пользователя
+  address: string; // адрес пользователя
+  paymentMethod: string; // метод доставки
+}
+
+interface ProductCardProps {
+  product: Product; // показывает данные продукта
+  onAddToCart: (product: Product) => void; // добавление в корзину
+}
+
+interface CatalogProps {
+  products: Product[]; // список продуктов
+  onAddToCart: (product: Product) => void; // Передаёт Product в ProductCard
+}
+
+interface CartPanelProps {
+  cart: Cart; // cписок товаров 
+  onCheckout: () => void; // кнопка «Оформить заказ»
+}
+
+interface OrderPayload {
+  items: CartItem[];  // список покупок
+  total: number; // количество
+  customer: { // данные покупателя
+    phone: string;
+    email: string;
+    address: string;
+    paymentMethod: string;
+  };
+}
+
+interface CheckoutFormProps {
+  cart: Cart;
+  onSubmit: (order: OrderPayload) => void;
 }
 
 interface CartItem {
   product: Product;
   count: number;
-}
-
-interface SearchEvent {
-  query: string;
-}
-
-interface FilterTagEvent {
-  tag: string;
 }
 
 interface AddToCartEvent {
@@ -117,11 +175,12 @@ interface AddToCartEvent {
 
 // События
 enum Events {
-  SEARCH = 'ui:search',
-  FILTER_TAG = 'ui:filter-tag',
-  ADD_TO_CART = 'ui:add-to-cart',
-  CHECKOUT = 'ui:checkout',
-  CART_UPDATED = 'cart:updated',
+  ADD_TO_CART = 'ui:add-to-cart', // добавить товар
+  CHECKOUT = 'ui:checkout', // добавить в корзину
+  CART_UPDATED = 'cart:updated', // корзина 
+  SUBMIT_ORDER = 'ui:submit-order', // оформление заказа
+  ORDER_COMPLETE = 'order:complete' // заказ оформлен
 }
 ```
+
 
